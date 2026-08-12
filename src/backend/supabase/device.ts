@@ -12,10 +12,10 @@ export function browserOsVersion(): string | null {
 
 export async function ensureDevice(profile: ProfileRow, publicDeviceId: string, displayName: string, appVersion: string): Promise<DeviceRow | null> {
   if (!supabase || profile.status !== 'approved') return null;
-  const { data: existing, error: readError } = await supabase.from('devices').select('*').eq('public_device_id', publicDeviceId).maybeSingle();
+  const { data: existing, error: readError } = await (supabase as any).from('devices').select('*').eq('public_device_id', publicDeviceId).maybeSingle();
   if (readError) throw readError;
   if (existing) {
-    const { data, error } = await supabase.from('devices').update({
+    const { data, error } = await (supabase as any).from('devices').update({
       display_name: displayName,
       os_version: browserOsVersion(),
       app_version: appVersion,
@@ -24,7 +24,7 @@ export async function ensureDevice(profile: ProfileRow, publicDeviceId: string, 
     if (error) throw error;
     return data;
   }
-  const { data, error } = await supabase.from('devices').insert({
+  const { data, error } = await (supabase as any).from('devices').insert({
     account_id: profile.id,
     public_device_id: publicDeviceId,
     display_name: displayName,

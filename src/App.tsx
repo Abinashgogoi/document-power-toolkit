@@ -457,6 +457,52 @@ function ProfileDrawer({
   </div>;
 }
 
+function HistoryPanel({ entries, onClear }: { entries: HistoryEntry[]; onClear: () => void }) {
+  return <div className="history-panel">
+    <div className="section-heading"><div><span className="eyebrow">Operation history</span><h2>{entries.length} operation{entries.length === 1 ? '' : 's'}</h2></div>{entries.length > 0 && <button className="text-button danger" onClick={onClear}><Trash2 size={15} /> Clear</button>}</div>
+    {entries.length === 0 ? (
+      <div className="empty-state"><History size={32} /><h3>No operations yet</h3><p>Tools you run will appear here.</p></div>
+    ) : (
+      <div className="history-list">{entries.map((entry) => (
+        <div className="history-item" key={entry.id}>
+          <div className="history-icon" style={{ opacity: entry.passed ? 1 : 0.6 }}>{entry.passed ? <CheckCircle2 size={18} /> : <CircleAlert size={18} />}</div>
+          <div className="history-content">
+            <div><strong>{entry.toolName}</strong><span className="history-time">{new Date(entry.timestamp).toLocaleDateString()} {new Date(entry.timestamp).toLocaleTimeString()}</span></div>
+            <div className="history-meta">
+              {entry.inputBytes > 0 && <span>{humanBytes(entry.inputBytes)} → {humanBytes(entry.outputBytes)}</span>}
+              {entry.durationMs > 0 && <span>{(entry.durationMs / 1000).toFixed(1)}s</span>}
+              {!entry.passed && <span className="warning">Verification issues</span>}
+            </div>
+          </div>
+        </div>
+      ))}</div>
+    )}
+  </div>;
+}
+
+function ResultPanel({ result }: { result: ProcessingResult }) {
+  return <div className="result-panel">
+    <div className="section-heading"><div><span className="eyebrow">Processing result</span><h2>Download output</h2></div></div>
+    <div className="result-content">
+      <div className="result-summary">
+        <div><span>Input</span><strong>{humanBytes(result.inputBytes)}</strong></div>
+        <div><span>Output</span><strong>{humanBytes(result.outputBytes)}</strong></div>
+        <div><span>Reduction</span><strong>{result.inputBytes > 0 ? ((1 - result.outputBytes / result.inputBytes) * 100).toFixed(0) : 0}%</strong></div>
+      </div>
+      {result.note && <div className="result-note"><Info size={16} /><span>{result.note}</span></div>}
+      <div className="result-verification">
+        {result.verification.checks.map((check) => (
+          <div className="verification-check" key={check.label}>
+            <div className="check-status">{check.passed ? <Check size={16} className="pass" /> : <CircleAlert size={16} className="fail" />}</div>
+            <div><div className="check-label">{check.label}</div><div className="check-detail">{check.detail}</div></div>
+          </div>
+        ))}
+      </div>
+      <button className="primary-button" onClick={() => downloadBlob(result.blob, result.fileName)}><Download size={17} /> Download {result.fileName}</button>
+    </div>
+  </div>;
+}
+
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) { return <label className="field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>; }
 function IdentityRow({ label, value }: { label: string; value: string }) { return <div className="identity-row"><span>{label}</span><code>{value}</code></div>; }
 function Toggle({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) { return <label className={`toggle-row ${disabled ? 'disabled' : ''}`}><span>{label}</span><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} disabled={disabled} /><i /></label>; }

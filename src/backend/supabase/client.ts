@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import { supabaseConfigured, supabasePublishableKey, supabaseUrl } from './config';
 
+export type SupabaseClientType = ReturnType<typeof createClient<Database>>;
+
 export const supabase = supabaseConfigured
   ? createClient<Database>(supabaseUrl, supabasePublishableKey, {
       auth: {

@@ -4,7 +4,7 @@ import type { Json } from './database.types';
 
 export async function syncHistoryEntry(accountId: string, deviceId: string | null, entry: HistoryEntry): Promise<void> {
   if (!supabase) return;
-  const { error } = await supabase.from('operation_history').insert({
+  const { error } = await (supabase as any).from('operation_history').insert({
     account_id: accountId,
     device_id: deviceId,
     tool: entry.tool,
@@ -23,7 +23,7 @@ export async function submitDiagnostic(input: {
   module: string; errorCode: string; safeMessage: string; safeContext?: Json;
 }): Promise<void> {
   if (!supabase) return;
-  const { error } = await supabase.from('diagnostics').insert({
+  const { error } = await (supabase as any).from('diagnostics').insert({
     fingerprint: input.fingerprint,
     account_id: input.accountId,
     device_id: input.deviceId ?? null,
@@ -40,7 +40,7 @@ export async function submitFeedback(input: {
   accountId: string; deviceId?: string | null; category: string; subject: string; body: string; safeContext?: Json;
 }): Promise<void> {
   if (!supabase) throw new Error('Supabase backend is not configured.');
-  const { error } = await supabase.from('feedback').insert({
+  const { error } = await (supabase as any).from('feedback').insert({
     account_id: input.accountId,
     device_id: input.deviceId ?? null,
     category: input.category,
