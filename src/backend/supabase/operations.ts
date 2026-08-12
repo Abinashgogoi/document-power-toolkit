@@ -1,47 +1,35 @@
-import type { SupabaseClient, PostgrestError } from '@supabase/supabase-js';
-import type { Database } from './database.types';
-import { supabase } from './client';
+import type { Database } from "./database.types";
+import { supabase } from "./client";
 
-/**
- * Typed Supabase database operations
- * These functions provide proper type safety by wrapping Supabase queries
- * with correct Database schema typing in signatures and return types.
- * 
- * ONLY necessary type assertions used:
- * 1. Client cast (line 18): After null-guard, cast untyped supabase to SupabaseClient<Database>
- * 2. Query builder cast: Supabase's query builder doesn't thread generic types through the
- *    builder chain - this is a known library limitation. We cast (client.from(...) as any)
- *    at the query builder level, but the function RESULT is properly typed and validated.
- */
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+type DeviceRow = Database["public"]["Tables"]["devices"]["Row"];
 
-type TypedSupabase = SupabaseClient<Database>;
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
-type DeviceRow = Database['public']['Tables']['devices']['Row'];
-
-function getTypedClient(): TypedSupabase {
-  if (!supabase) throw new Error('Supabase is not configured');
-  return supabase as unknown as TypedSupabase;
+function getClient() {
+  if (!supabase) throw new Error("Supabase is not configured");
+  return supabase;
 }
 
 export async function updateProfileRow(
   id: string,
-  updates: Database['public']['Tables']['profiles']['Update'],
+  updates: Database["public"]["Tables"]["profiles"]["Update"],
 ): Promise<ProfileRow> {
-  const client = getTypedClient();
-  const { data, error } = await (client.from('profiles') as any)
+  const { data, error } = await getClient()
+    .from("profiles")
     .update(updates)
-    .eq('id', id)
-    .select('*')
+    .eq("id", id)
+    .select("*")
     .single();
   if (error) throw error;
   return data;
 }
 
-export async function selectDeviceRow(publicDeviceId: string): Promise<DeviceRow | null> {
-  const client = getTypedClient();
-  const { data, error } = await (client.from('devices') as any)
-    .select('*')
-    .eq('public_device_id', publicDeviceId)
+export async function selectDeviceRow(
+  publicDeviceId: string,
+): Promise<DeviceRow | null> {
+  const { data, error } = await getClient()
+    .from("devices")
+    .select("*")
+    .eq("public_device_id", publicDeviceId)
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -49,50 +37,47 @@ export async function selectDeviceRow(publicDeviceId: string): Promise<DeviceRow
 
 export async function updateDeviceRow(
   id: string,
-  updates: Database['public']['Tables']['devices']['Update'],
+  updates: Database["public"]["Tables"]["devices"]["Update"],
 ): Promise<DeviceRow> {
-  const client = getTypedClient();
-  const { data, error } = await (client.from('devices') as any)
+  const { data, error } = await getClient()
+    .from("devices")
     .update(updates)
-    .eq('id', id)
-    .select('*')
+    .eq("id", id)
+    .select("*")
     .single();
   if (error) throw error;
   return data;
 }
 
 export async function insertDeviceRow(
-  device: Database['public']['Tables']['devices']['Insert'],
+  device: Database["public"]["Tables"]["devices"]["Insert"],
 ): Promise<DeviceRow> {
-  const client = getTypedClient();
-  const { data, error } = await (client.from('devices') as any)
+  const { data, error } = await getClient()
+    .from("devices")
     .insert(device)
-    .select('*')
+    .select("*")
     .single();
   if (error) throw error;
   return data;
 }
 
 export async function insertOperationHistory(
-  entry: Database['public']['Tables']['operation_history']['Insert'],
+  entry: Database["public"]["Tables"]["operation_history"]["Insert"],
 ): Promise<void> {
-  const client = getTypedClient();
-  const { error } = await (client.from('operation_history') as any).insert(entry);
+  const { error } = await getClient().from("operation_history").insert(entry);
   if (error) throw error;
 }
 
 export async function insertDiagnostic(
-  diagnostic: Database['public']['Tables']['diagnostics']['Insert'],
+  diagnostic: Database["public"]["Tables"]["diagnostics"]["Insert"],
 ): Promise<void> {
-  const client = getTypedClient();
-  const { error } = await (client.from('diagnostics') as any).insert(diagnostic);
+  const { error } = await getClient().from("diagnostics").insert(diagnostic);
   if (error) throw error;
 }
 
 export async function insertFeedback(
-  feedback: Database['public']['Tables']['feedback']['Insert'],
+  feedback: Database["public"]["Tables"]["feedback"]["Insert"],
 ): Promise<void> {
-  const client = getTypedClient();
-  const { error } = await (client.from('feedback') as any).insert(feedback);
+  const { error } = await getClient().from("feedback").insert(feedback);
   if (error) throw error;
 }

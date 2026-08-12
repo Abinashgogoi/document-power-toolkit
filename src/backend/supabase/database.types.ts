@@ -1,70 +1,346 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
-export type AccountStatus = 'pending' | 'approved' | 'rejected' | 'disabled';
-export type AccountRole = 'user' | 'admin' | 'super_admin';
-export type DeviceTrust = 'pending' | 'trusted' | 'revoked';
-
-export interface ProfileRow {
-  id: string;
-  display_name: string;
-  status: AccountStatus;
-  role: AccountRole;
-  approved_at: string | null;
-  approved_by: string | null;
-  rejection_reason: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface DeviceRow {
-  id: string;
-  account_id: string;
-  public_device_id: string;
-  display_name: string;
-  platform: string;
-  os_version: string | null;
-  app_version: string;
-  trust: DeviceTrust;
-  last_active_at: string;
-  created_at: string;
-  revoked_at: string | null;
-}
-
-export interface FeatureFlagRow {
-  key: string;
-  enabled: boolean;
-  stable_only: boolean;
-  description: string;
-  updated_by: string | null;
-  updated_at: string;
-}
-
-export interface Database {
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "14.15";
+  };
   public: {
     Tables: {
-      profiles: { Row: ProfileRow; Insert: Partial<ProfileRow> & { id: string }; Update: Partial<ProfileRow>; Relationships: [] };
-      devices: { Row: DeviceRow; Insert: Partial<DeviceRow> & Pick<DeviceRow, 'account_id' | 'display_name' | 'platform' | 'app_version'>; Update: Partial<DeviceRow>; Relationships: [] };
-      operation_history: {
-        Row: { id: string; account_id: string; device_id: string | null; tool: string; input_bytes: number | null; output_bytes: number | null; duration_ms: number | null; verification_passed: boolean; safe_settings: Json; created_at: string };
-        Insert: { id?: string; account_id: string; device_id?: string | null; tool: string; input_bytes?: number | null; output_bytes?: number | null; duration_ms?: number | null; verification_passed: boolean; safe_settings?: Json; created_at?: string };
-        Update: Record<string, never>; Relationships: [];
+      admin_audit_log: {
+        Row: {
+          action: string;
+          actor_id: string;
+          created_at: string;
+          id: number;
+          safe_details: Json;
+          target_id: string;
+          target_type: string;
+        };
+        Insert: {
+          action: string;
+          actor_id: string;
+          created_at?: string;
+          id?: never;
+          safe_details?: Json;
+          target_id: string;
+          target_type: string;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string;
+          created_at?: string;
+          id?: never;
+          safe_details?: Json;
+          target_id?: string;
+          target_type?: string;
+        };
+        Relationships: [];
+      };
+      devices: {
+        Row: {
+          account_id: string;
+          app_version: string;
+          created_at: string;
+          display_name: string;
+          id: string;
+          last_active_at: string;
+          os_version: string | null;
+          platform: string;
+          public_device_id: string;
+          revoked_at: string | null;
+          trust: Database["public"]["Enums"]["device_trust"];
+        };
+        Insert: {
+          account_id: string;
+          app_version: string;
+          created_at?: string;
+          display_name: string;
+          id?: string;
+          last_active_at?: string;
+          os_version?: string | null;
+          platform: string;
+          public_device_id?: string;
+          revoked_at?: string | null;
+          trust?: Database["public"]["Enums"]["device_trust"];
+        };
+        Update: {
+          account_id?: string;
+          app_version?: string;
+          created_at?: string;
+          display_name?: string;
+          id?: string;
+          last_active_at?: string;
+          os_version?: string | null;
+          platform?: string;
+          public_device_id?: string;
+          revoked_at?: string | null;
+          trust?: Database["public"]["Enums"]["device_trust"];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "devices_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       diagnostics: {
-        Row: { id: string; fingerprint: string; account_id: string; device_id: string | null; app_version: string; module: string; error_code: string; safe_message: string; safe_context: Json; occurrence_count: number; first_seen_at: string; last_seen_at: string; resolved_at: string | null };
-        Insert: { id?: string; fingerprint: string; account_id: string; device_id?: string | null; app_version: string; module: string; error_code: string; safe_message: string; safe_context?: Json; occurrence_count?: number; first_seen_at?: string; last_seen_at?: string; resolved_at?: string | null };
-        Update: Partial<{ occurrence_count: number; last_seen_at: string; resolved_at: string | null }>; Relationships: [];
+        Row: {
+          account_id: string;
+          app_version: string;
+          device_id: string | null;
+          error_code: string;
+          fingerprint: string;
+          first_seen_at: string;
+          id: string;
+          last_seen_at: string;
+          module: string;
+          occurrence_count: number;
+          resolved_at: string | null;
+          safe_context: Json;
+          safe_message: string;
+        };
+        Insert: {
+          account_id: string;
+          app_version: string;
+          device_id?: string | null;
+          error_code: string;
+          fingerprint: string;
+          first_seen_at?: string;
+          id?: string;
+          last_seen_at?: string;
+          module: string;
+          occurrence_count?: number;
+          resolved_at?: string | null;
+          safe_context?: Json;
+          safe_message: string;
+        };
+        Update: {
+          account_id?: string;
+          app_version?: string;
+          device_id?: string | null;
+          error_code?: string;
+          fingerprint?: string;
+          first_seen_at?: string;
+          id?: string;
+          last_seen_at?: string;
+          module?: string;
+          occurrence_count?: number;
+          resolved_at?: string | null;
+          safe_context?: Json;
+          safe_message?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "diagnostics_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "diagnostics_device_id_fkey";
+            columns: ["device_id"];
+            isOneToOne: false;
+            referencedRelation: "devices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      feature_flags: {
+        Row: {
+          description: string;
+          enabled: boolean;
+          key: string;
+          stable_only: boolean;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          description: string;
+          enabled?: boolean;
+          key: string;
+          stable_only?: boolean;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          description?: string;
+          enabled?: boolean;
+          key?: string;
+          stable_only?: boolean;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
       };
       feedback: {
-        Row: { id: string; account_id: string; device_id: string | null; category: string; subject: string; body: string; safe_context: Json; status: string; created_at: string; updated_at: string };
-        Insert: { id?: string; account_id: string; device_id?: string | null; category: string; subject: string; body: string; safe_context?: Json; status?: string; created_at?: string; updated_at?: string };
-        Update: Partial<{ status: string }>; Relationships: [];
+        Row: {
+          account_id: string;
+          body: string;
+          category: string;
+          created_at: string;
+          device_id: string | null;
+          id: string;
+          safe_context: Json;
+          status: string;
+          subject: string;
+          updated_at: string;
+        };
+        Insert: {
+          account_id: string;
+          body: string;
+          category: string;
+          created_at?: string;
+          device_id?: string | null;
+          id?: string;
+          safe_context?: Json;
+          status?: string;
+          subject: string;
+          updated_at?: string;
+        };
+        Update: {
+          account_id?: string;
+          body?: string;
+          category?: string;
+          created_at?: string;
+          device_id?: string | null;
+          id?: string;
+          safe_context?: Json;
+          status?: string;
+          subject?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "feedback_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "feedback_device_id_fkey";
+            columns: ["device_id"];
+            isOneToOne: false;
+            referencedRelation: "devices";
+            referencedColumns: ["id"];
+          },
+        ];
       };
-      feature_flags: { Row: FeatureFlagRow; Insert: Partial<FeatureFlagRow> & Pick<FeatureFlagRow, 'key' | 'description'>; Update: Partial<FeatureFlagRow>; Relationships: [] };
-      admin_audit_log: { Row: { id: number; actor_id: string; action: string; target_type: string; target_id: string; safe_details: Json; created_at: string }; Insert: Record<string, never>; Update: Record<string, never>; Relationships: [] };
+      operation_history: {
+        Row: {
+          account_id: string;
+          created_at: string;
+          device_id: string | null;
+          duration_ms: number | null;
+          id: string;
+          input_bytes: number | null;
+          output_bytes: number | null;
+          safe_settings: Json;
+          tool: string;
+          verification_passed: boolean;
+        };
+        Insert: {
+          account_id: string;
+          created_at?: string;
+          device_id?: string | null;
+          duration_ms?: number | null;
+          id?: string;
+          input_bytes?: number | null;
+          output_bytes?: number | null;
+          safe_settings?: Json;
+          tool: string;
+          verification_passed: boolean;
+        };
+        Update: {
+          account_id?: string;
+          created_at?: string;
+          device_id?: string | null;
+          duration_ms?: number | null;
+          id?: string;
+          input_bytes?: number | null;
+          output_bytes?: number | null;
+          safe_settings?: Json;
+          tool?: string;
+          verification_passed?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "operation_history_account_id_fkey";
+            columns: ["account_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "operation_history_device_id_fkey";
+            columns: ["device_id"];
+            isOneToOne: false;
+            referencedRelation: "devices";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      profiles: {
+        Row: {
+          approved_at: string | null;
+          approved_by: string | null;
+          created_at: string;
+          display_name: string;
+          id: string;
+          rejection_reason: string | null;
+          role: Database["public"]["Enums"]["account_role"];
+          status: Database["public"]["Enums"]["account_status"];
+          updated_at: string;
+        };
+        Insert: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          created_at?: string;
+          display_name?: string;
+          id: string;
+          rejection_reason?: string | null;
+          role?: Database["public"]["Enums"]["account_role"];
+          status?: Database["public"]["Enums"]["account_status"];
+          updated_at?: string;
+        };
+        Update: {
+          approved_at?: string | null;
+          approved_by?: string | null;
+          created_at?: string;
+          display_name?: string;
+          id?: string;
+          rejection_reason?: string | null;
+          role?: Database["public"]["Enums"]["account_role"];
+          status?: Database["public"]["Enums"]["account_status"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: { account_status: AccountStatus; account_role: AccountRole; device_trust: DeviceTrust };
-    CompositeTypes: Record<string, never>;
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
+    Enums: {
+      account_role: "user" | "admin" | "super_admin";
+      account_status: "pending" | "approved" | "rejected" | "disabled";
+      device_trust: "pending" | "trusted" | "revoked";
+    };
+    CompositeTypes: { [_ in never]: never };
   };
-}
+};
+
+export type AccountStatus = Database["public"]["Enums"]["account_status"];
+export type AccountRole = Database["public"]["Enums"]["account_role"];
+export type DeviceTrust = Database["public"]["Enums"]["device_trust"];
+export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+export type DeviceRow = Database["public"]["Tables"]["devices"]["Row"];
+export type FeatureFlagRow = Database["public"]["Tables"]["feature_flags"]["Row"];
