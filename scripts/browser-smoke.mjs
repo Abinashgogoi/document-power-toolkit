@@ -70,7 +70,7 @@ try {
   await page.getByRole('button', { name: 'Next page of second.pdf' }).click();
   await page.getByLabel('second.pdf page 2 preview').waitFor();
   await page.getByRole('button', { name: 'Create PDF' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 15_000 });
+  await waitForText(page, 'Verified output', { timeout: 15_000 });
   await page.screenshot({ path: 'tests/artifacts/merge-verified.png', fullPage: true });
 
   await page.getByLabel('Open account profile').click();
@@ -89,7 +89,7 @@ try {
   await page.getByRole('button', { name: /Page 2 selected for deletion/ }).waitFor();
   await page.screenshot({ path: 'tests/artifacts/delete-page-previews.png', fullPage: true });
   await page.getByRole('button', { name: 'Create PDF' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Verified output', { timeout: 30_000 });
 
   await runSingleFileTool(page, 'Split PDF', first, 'Create ZIP');
   await runSingleFileTool(page, 'Rotate pages', first, 'Create PDF');
@@ -104,7 +104,7 @@ try {
   }
   if (await page.getByLabel('Complete new page order').inputValue() !== '1-2') throw new Error('Reorder page order was not initialized from the uploaded PDF.');
   await page.getByRole('button', { name: 'Create PDF' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Verified output', { timeout: 30_000 });
 
   await runSingleFileTool(page, 'Duplicate pages', second, 'Create PDF');
   await runSingleFileTool(page, 'Add blank pages', first, 'Create PDF');
@@ -122,19 +122,19 @@ try {
   if (await page.locator('.file-list .file-row').count() !== 2) throw new Error('Sequential image selection did not preserve both images.');
   if (await page.locator('[data-preview-file] img').count() !== 2) throw new Error('Images to PDF did not provide one visual preview per uploaded image.');
   await page.getByRole('button', { name: 'Create PDF' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Verified output', { timeout: 30_000 });
 
   await page.getByRole('button', { name: 'All tools', exact: true }).click();
   await openTool(page, 'PDF to images');
   await page.getByLabel('Select files for PDF to images').setInputFiles(second);
   await page.getByRole('button', { name: 'Create ZIP' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Verified output', { timeout: 30_000 });
 
   await page.getByRole('button', { name: 'All tools', exact: true }).click();
   await openTool(page, 'PDF to text');
   await page.getByLabel('Select files for PDF to text').setInputFiles(second);
   await page.getByRole('button', { name: 'Create TXT' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Verified output', { timeout: 30_000 });
 
   await page.getByRole('button', { name: 'All tools', exact: true }).click();
   await openTool(page, 'Resize image');
@@ -142,26 +142,26 @@ try {
   await page.getByLabel('Width (px)').fill('320');
   await page.getByLabel('Height (px)').fill('120');
   await page.getByRole('button', { name: 'Create Image' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Verified output', { timeout: 30_000 });
 
   await page.getByRole('button', { name: 'All tools', exact: true }).click();
   await openTool(page, 'Compress image');
   await page.getByLabel('Select files for Compress image').setInputFiles(libraryScreenshot);
   await page.getByLabel('Maximum output size').fill('40');
   await page.getByRole('button', { name: 'Create Image' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Verified output', { timeout: 30_000 });
 
   await page.getByRole('button', { name: 'All tools', exact: true }).click();
   await openTool(page, 'OCR text recognition');
   await page.getByLabel('Select files for OCR text recognition').setInputFiles(ocrFixture);
   await page.getByRole('button', { name: 'Create TXT' }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 120_000 });
+  await waitForText(page, 'Verified output', { timeout: 120_000 });
 
   await page.getByRole('button', { name: 'All tools', exact: true }).click();
   await openTool(page, 'Inspect PDF signatures');
   await page.getByLabel('Select files for Inspect PDF signatures').setInputFiles(first);
   await page.getByRole('button', { name: 'Create JSON' }).click();
-  await page.getByText('Output needs attention').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Output needs attention', { timeout: 30_000 });
   if (await page.getByText('Verified output').count()) throw new Error('Unsigned PDF was incorrectly shown as verified.');
 
   if (failures.length) throw new Error(`Browser emitted errors:\n${failures.join('\n')}`);
@@ -199,10 +199,33 @@ async function openTool(page, name) {
   await page.locator('.tool-card').filter({ has: page.getByRole('heading', { name, exact: true }) }).click();
 }
 
+async function waitForText(page, text, options = {}) {
+  const timeout = options.timeout || 30_000;
+  try {
+    await page.getByText(text).waitFor({ timeout });
+  } catch (error) {
+    // Capture diagnostics on timeout
+    const visibleText = await page.locator('.result-panel').textContent().catch(() => 'N/A');
+    const consoleMessages = [];
+    const allMessages = [];
+    page.on('console', (msg) => allMessages.push(`${msg.type()}: ${msg.text()}`));
+    await page.screenshot({ path: `tests/artifacts/failure-${Date.now()}.png` }).catch(() => {});
+    const errorDetails = `
+Expected text not found: "${text}"
+Timeout: ${timeout}ms
+Visible result panel text: ${visibleText}
+Result eyebrow: ${await page.locator('.section-heading .eyebrow').textContent().catch(() => 'N/A')}
+All result checks visible: ${await page.locator('.verification-check').count().catch(() => 'N/A')}
+Page errors captured: ${allMessages.length > 0 ? allMessages.join('\n') : 'none'}
+`;
+    throw new Error(`${error.message}\nDiagnostics:${errorDetails}`);
+  }
+}
+
 async function runSingleFileTool(page, name, file, createButton) {
   await page.getByRole('button', { name: 'All tools', exact: true }).click();
   await openTool(page, name);
   await page.getByLabel(`Select files for ${name}`).setInputFiles(file);
   await page.getByRole('button', { name: createButton }).click();
-  await page.getByText('Verified output').waitFor({ timeout: 30_000 });
+  await waitForText(page, 'Verified output', { timeout: 30_000 });
 }

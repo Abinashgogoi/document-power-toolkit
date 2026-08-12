@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient, PostgrestError } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 import { supabase } from './client';
 
@@ -6,8 +6,12 @@ import { supabase } from './client';
  * Typed Supabase database operations
  * These functions provide proper type safety by wrapping Supabase queries
  * with correct Database schema typing in signatures and return types.
- * Internal Supabase method calls use type parameters to work around the
- * library's generic type inference limitations.
+ * 
+ * ONLY necessary type assertions used:
+ * 1. Client cast (line 18): After null-guard, cast untyped supabase to SupabaseClient<Database>
+ * 2. Query builder cast: Supabase's query builder doesn't thread generic types through the
+ *    builder chain - this is a known library limitation. We cast (client.from(...) as any)
+ *    at the query builder level, but the function RESULT is properly typed and validated.
  */
 
 type TypedSupabase = SupabaseClient<Database>;

@@ -482,7 +482,7 @@ function HistoryPanel({ entries, onClear }: { entries: HistoryEntry[]; onClear: 
 
 function ResultPanel({ result }: { result: ProcessingResult }) {
   return <div className="result-panel">
-    <div className="section-heading"><div><span className="eyebrow">{result.verification.passed ? 'Verified output' : 'Output ready'}</span><h2>Download file</h2></div></div>
+    <div className="section-heading"><div><span className="eyebrow">{result.verification.passed ? 'Verified output' : 'Output needs attention'}</span><h2>Download file</h2></div></div>
     <div className="result-content">
       <div className="result-summary">
         <div><span>Input</span><strong>{humanBytes(result.inputBytes)}</strong></div>
