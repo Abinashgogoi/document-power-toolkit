@@ -1,5 +1,6 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./client";
+import { updateProfileRow } from "./operations";
 import type { ProfileRow } from "./database.types";
 
 export interface CloudIdentity {
@@ -78,12 +79,5 @@ export async function updateDisplayName(
   } = await supabase.auth.getUser();
   if (userError) throw userError;
   if (!user) throw new Error("Sign in required.");
-  const { data, error } = await (supabase as any)
-    .from("profiles")
-    .update({ display_name: displayName })
-    .eq("id", user.id)
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data;
+  return updateProfileRow(user.id, { display_name: displayName });
 }

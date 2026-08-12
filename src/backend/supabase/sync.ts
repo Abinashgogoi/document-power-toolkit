@@ -1,10 +1,13 @@
-import type { HistoryEntry } from '../../types';
-import { supabase } from './client';
-import type { Json } from './database.types';
+import type { HistoryEntry } from "../../types";
+import { insertOperationHistory, insertDiagnostic, insertFeedback } from "./operations";
+import type { Json } from "./database.types";
 
-export async function syncHistoryEntry(accountId: string, deviceId: string | null, entry: HistoryEntry): Promise<void> {
-  if (!supabase) return;
-  const { error } = await (supabase as any).from('operation_history').insert({
+export async function syncHistoryEntry(
+  accountId: string,
+  deviceId: string | null,
+  entry: HistoryEntry,
+): Promise<void> {
+  await insertOperationHistory({
     account_id: accountId,
     device_id: deviceId,
     tool: entry.tool,
@@ -15,15 +18,19 @@ export async function syncHistoryEntry(accountId: string, deviceId: string | nul
     safe_settings: entry.settings as Json,
     created_at: entry.timestamp,
   });
-  if (error) throw error;
 }
 
 export async function submitDiagnostic(input: {
-  fingerprint: string; accountId: string; deviceId?: string | null; appVersion: string;
-  module: string; errorCode: string; safeMessage: string; safeContext?: Json;
+  fingerprint: string;
+  accountId: string;
+  deviceId?: string | null;
+  appVersion: string;
+  module: string;
+  errorCode: string;
+  safeMessage: string;
+  safeContext?: Json;
 }): Promise<void> {
-  if (!supabase) return;
-  const { error } = await (supabase as any).from('diagnostics').insert({
+  await insertDiagnostic({
     fingerprint: input.fingerprint,
     account_id: input.accountId,
     device_id: input.deviceId ?? null,
@@ -33,14 +40,17 @@ export async function submitDiagnostic(input: {
     safe_message: input.safeMessage.slice(0, 1000),
     safe_context: input.safeContext ?? {},
   });
-  if (error) throw error;
 }
 
 export async function submitFeedback(input: {
-  accountId: string; deviceId?: string | null; category: string; subject: string; body: string; safeContext?: Json;
+  accountId: string;
+  deviceId?: string | null;
+  category: string;
+  subject: string;
+  body: string;
+  safeContext?: Json;
 }): Promise<void> {
-  if (!supabase) throw new Error('Supabase backend is not configured.');
-  const { error } = await (supabase as any).from('feedback').insert({
+  await insertFeedback({
     account_id: input.accountId,
     device_id: input.deviceId ?? null,
     category: input.category,
@@ -48,5 +58,4 @@ export async function submitFeedback(input: {
     body: input.body,
     safe_context: input.safeContext ?? {},
   });
-  if (error) throw error;
 }
