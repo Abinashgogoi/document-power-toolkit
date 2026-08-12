@@ -1,0 +1,12 @@
+{
+  "project_name": "Document Power Toolkit",
+  "package_name": "document-power-toolkit",
+  "version": "0.2.1",
+  "github_repository": "Abinashgogoi/document-power-toolkit",
+  "default_branch": "main",
+  "cloudflare_project": "document-power-toolkit",
+  "supabase_project": "Document Power Toolkit",
+  "release_channel": "developer",
+  "web_app_id": "com.abinashgogoi.documenttoolkit.web",
+  "documents_upload_by_default": false
+}

@@ -1,0 +1,12 @@
+node_modules
+dist
+.DS_Store
+*.local
+coverage
+*.tsbuildinfo
+public/ocr
+tests/artifacts
+.env
+.env.*
+!.env.example
+.deploy-keys/

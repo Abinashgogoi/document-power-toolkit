@@ -1,0 +1,9 @@
+Document Power Toolkit - Milestone 3 Final Source Package
+Version: 0.2.1
+GitHub target: Abinashgogoi/document-power-toolkit (main)
+Cloudflare target: document-power-toolkit
+Supabase project ref: pwzwvrlcjxgkblawtrkb
+Production hosting: Cloudflare (ChatGPT hosting excluded)
+Secrets/private keys included: NO
+Local .env included: NO
+Package lock: intentionally omitted because Supabase dependency was added in a network-isolated environment; GitHub CI uses npm install and can generate a fresh lock after upload.
