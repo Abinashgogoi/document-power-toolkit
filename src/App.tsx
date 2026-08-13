@@ -22,9 +22,10 @@ import {
   appendSelectedFiles, downloadBlob, humanBytes, parseOrderedPageSelection, parsePageSelection,
 } from './lib/files';
 import { errorMessage } from './lib/verification';
+import { classifyProcessingError } from './lib/diagnostics';
 import {
   emptyCloudState, loadCloudState, onAuthChange, signIn, signOut, signUp,
-  subscribeControlPlane, supabaseConfigured, syncHistoryEntry, updateDisplayName, type CloudState,
+  submitDiagnostic, subscribeControlPlane, supabaseConfigured, syncHistoryEntry, updateDisplayName, type CloudState,
 } from './backend/supabase';
 import { CATEGORY_LABELS, TOOLS } from './tools';
 import type {
@@ -241,6 +242,26 @@ export default function App() {
     } catch (caught) {
       setError(errorMessage(caught));
       setProgress({ message: 'Processing stopped safely; the source was not changed.', percent: 0 });
+
+      if (cloudState.profile?.status === 'approved' && activeTool) {
+        const diagnostic = classifyProcessingError({
+          tool: activeTool.id,
+          error: caught,
+          files,
+        });
+        void submitDiagnostic({
+          fingerprint: diagnostic.fingerprint,
+          accountId: cloudState.profile.id,
+          deviceId: cloudState.device?.id ?? null,
+          appVersion: '0.2.1',
+          module: activeTool.id,
+          errorCode: diagnostic.code,
+          safeMessage: diagnostic.message,
+          safeContext: diagnostic.context,
+        }).catch((diagnosticError) => {
+          setCloudError(`Diagnostic stayed local; report upload failed: ${errorMessage(diagnosticError)}`);
+        });
+      }
     } finally {
       setBusy(false);
     }

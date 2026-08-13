@@ -338,6 +338,18 @@ export type Database = {
         Args: { is_resolved: boolean; target_id: string; };
         Returns: Database["public"]["Tables"]["diagnostics"]["Row"];
       };
+      report_diagnostic: {
+        Args: {
+          p_app_version: string;
+          p_device_id: string | null;
+          p_error_code: string;
+          p_fingerprint: string;
+          p_module: string;
+          p_safe_context?: Json;
+          p_safe_message: string;
+        };
+        Returns: Database["public"]["Tables"]["diagnostics"]["Row"];
+      };
       admin_set_feedback_status: {
         Args: { new_status: string; target_id: string; };
         Returns: Database["public"]["Tables"]["feedback"]["Row"];

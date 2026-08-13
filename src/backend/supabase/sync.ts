@@ -1,5 +1,6 @@
 import type { HistoryEntry } from "../../types";
-import { insertOperationHistory, insertDiagnostic, insertFeedback } from "./operations";
+import { insertOperationHistory, insertFeedback } from "./operations";
+import { supabase } from "./client";
 import type { Json } from "./database.types";
 
 export async function syncHistoryEntry(
@@ -30,16 +31,16 @@ export async function submitDiagnostic(input: {
   safeMessage: string;
   safeContext?: Json;
 }): Promise<void> {
-  await insertDiagnostic({
-    fingerprint: input.fingerprint,
-    account_id: input.accountId,
-    device_id: input.deviceId ?? null,
-    app_version: input.appVersion,
-    module: input.module,
-    error_code: input.errorCode,
-    safe_message: input.safeMessage.slice(0, 1000),
-    safe_context: input.safeContext ?? {},
+  const { error } = await supabase!.rpc('report_diagnostic', {
+    p_fingerprint: input.fingerprint,
+    p_device_id: input.deviceId ?? null,
+    p_app_version: input.appVersion,
+    p_module: input.module,
+    p_error_code: input.errorCode,
+    p_safe_message: input.safeMessage.slice(0, 1000),
+    p_safe_context: input.safeContext ?? {},
   });
+  if (error) throw error;
 }
 
 export async function submitFeedback(input: {
