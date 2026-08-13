@@ -352,3 +352,52 @@ main { min-width: 0; }
 .secondary-button:disabled, .primary-button:disabled { opacity: .55; cursor: not-allowed; }
 .backend-status.connected { border-color: rgba(25, 135, 84, .28); }
 .drawer-footer { gap: 10px; flex-wrap: wrap; }
+
+/* TANTRA M4: mobile modal navigation and live milestone state */
+.sidebar-backdrop {
+  display: none;
+}
+
+.milestone-tree {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 8px 12px 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.milestone-tree span {
+  border: 1px solid var(--border, #d8dee8);
+  border-radius: 999px;
+  padding: 3px 6px;
+}
+
+.milestone-tree .done {
+  opacity: .7;
+}
+
+.milestone-tree .active {
+  border-color: currentColor;
+  opacity: 1;
+}
+
+@media (max-width: 899px) {
+  .sidebar {
+    z-index: 60;
+  }
+
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    background: rgba(15, 23, 42, .42);
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+  }
+}

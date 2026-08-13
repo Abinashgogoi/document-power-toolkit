@@ -28,6 +28,7 @@ import {
   submitDiagnostic, subscribeControlPlane, supabaseConfigured, syncHistoryEntry, updateDisplayName, type CloudState,
 } from './backend/supabase';
 import { CATEGORY_LABELS, TOOLS } from './tools';
+import packageJson from '../package.json';
 import type {
   CompressionOptions, HistoryEntry, LocalProfile, ProcessingResult, QualityFloor,
   ToolCategory, ToolDefinition, ToolId,
@@ -44,6 +45,7 @@ const TOOL_ICONS: Record<ToolId, typeof Combine> = {
 };
 
 type CategoryFilter = ToolCategory | 'all';
+const APP_VERSION = packageJson.version;
 
 export default function App() {
   const [activeToolId, setActiveToolId] = useState<ToolId | null>(null);
@@ -108,7 +110,7 @@ export default function App() {
     }
     setCloudBusy(true);
     try {
-      const next = await loadCloudState(profile.cloudDeviceId, profile.deviceId, '0.2.1');
+      const next = await loadCloudState(profile.cloudDeviceId, profile.deviceId, APP_VERSION);
       setCloudState(next);
       setCloudError('');
     } catch (caught) {
@@ -253,7 +255,7 @@ export default function App() {
           fingerprint: diagnostic.fingerprint,
           accountId: cloudState.profile.id,
           deviceId: cloudState.device?.id ?? null,
-          appVersion: '0.2.1',
+          appVersion: APP_VERSION,
           module: activeTool.id,
           errorCode: diagnostic.code,
           safeMessage: diagnostic.message,
@@ -314,7 +316,7 @@ export default function App() {
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark"><FileOutput size={21} /></div>
-          <div><strong>Document Toolkit</strong><span>Private workstation</span></div>
+          <div><strong>TANTRA</strong><span>Private Document Studio</span></div>
           <button className="icon-button sidebar-toggle" onClick={() => setSidebarOpen(false)} aria-label="Close navigation"><PanelLeftClose size={18} /></button>
         </div>
         <nav className="category-nav" aria-label="Tool categories">
@@ -329,8 +331,17 @@ export default function App() {
           <button onClick={() => setProfileOpen(true)}><UserRound size={18} /><span>Account & device</span><ChevronRight size={15} /></button>
         </nav>
         <div className="privacy-card"><ShieldCheck size={19} /><div><strong>Local by default</strong><span>Documents remain on this device.</span></div></div>
-        <div className="version">Milestone 2 · v0.2.1</div>
+        <div className="milestone-tree" aria-label="Project milestones"><span className="done">M1 ✓</span><span className="done">M2 ✓</span><span className="done">M3 ✓</span><span className="active">M4 Active</span></div><div className="version">TANTRA · v{APP_VERSION}</div>
       </aside>
+
+      {sidebarOpen && (
+        <button
+          type="button"
+          className="sidebar-backdrop"
+          aria-label="Close navigation"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       <main>
         <header className="topbar">

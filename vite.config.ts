@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'Document Power Toolkit',
-        short_name: 'Doc Toolkit',
-        description: 'Private, local-first PDF and image workstation',
+        name: 'TANTRA',
+        short_name: 'TANTRA',
+        description: 'Private Document Studio for local-first document work',
         theme_color: '#111827',
         background_color: '#f4f6f8',
         display: 'standalone',

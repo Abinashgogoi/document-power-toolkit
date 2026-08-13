@@ -1,7 +1,7 @@
 {
   "name": "document-power-toolkit",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
     "prepare:ocr": "node scripts/prepare-ocr.mjs",

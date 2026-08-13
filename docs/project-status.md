@@ -1,33 +1,36 @@
-# Document Power Toolkit — Milestone 3 Status
+# TANTRA — Project Status
+
+## Current release
+- Public product name: **TANTRA**
+- Product line: **Private Document Studio**
+- Internal repository: `Abinashgogoi/document-power-toolkit`
+- Current version: **0.3.0**
+- Active milestone: **Milestone 4 — Android App & Field Distribution**
+- Milestones 1–3: **complete**
 
 ## Production architecture
-- **GitHub:** source of truth, CI/build automation, Releases for mobile/desktop artifacts, and deployment trigger.
-- **Cloudflare:** production Web/PWA hosting and edge delivery.
-- **Supabase:** Auth, profiles, approval state, devices, safe metadata history, diagnostics, feedback, feature flags, and admin audit.
-- **Local clients:** document contents remain local by default. PDFs/images are not uploaded by default.
-- **ChatGPT hosting:** not part of the production architecture; it was a temporary testing host only.
+- **GitHub:** source of truth, CI/build automation, release history, deployment trigger.
+- **Cloudflare Pages:** production Web/PWA hosting and edge delivery.
+- **Supabase:** Auth, profiles, approval state, devices, safe metadata history, diagnostics, feedback, feature flags, admin audit, and Realtime control data.
+- **Web/PWA:** remains a first-class client for desktop/laptop and browser users.
+- **Android:** Milestone 4 target; reuses the existing React/Vite core through a native Android shell.
+- **Documents:** remain local by default. PDFs/images are not automatically uploaded to Supabase.
 
-## Supabase
-- Dedicated project: `document power toolkit`
-- Project ref: `pwzwvrlcjxgkblawtrkb`
-- Core schema deployed with RLS.
-- Realtime control tables: `profiles`, `devices`, `feature_flags`.
-- Security advisor: clean at the latest verification checkpoint.
-- Frontend integration source is present under `src/backend/supabase/`.
+## Milestone state
+- M1 ✅ Local workstation core
+- M2 ✅ Scalable local workstation
+- M3 ✅ Production Web/PWA & cloud control plane
+- M4 🟡 Android App & Field Distribution
+- M5 ⏳ Field Beta, Runtime Stabilization & Continuous Product Evolution
 
-## GitHub target
-- Repository: `Abinashgogoi/document-power-toolkit`
-- Branch: `main`
-- Direct-push fallback is documented in `docs/GITHUB_DIRECT_PUSH_RUNBOOK.md`.
+## Current M4 Stage 1
+1. Lock Android architecture.
+2. Transition product identity to TANTRA.
+3. Make package version the source for visible app version.
+4. Update in-product milestone state.
+5. Fix mobile navigation dismissal with a blocking scrim.
+6. Design TANTRA logo, adaptive icon, launch motion and original sonic signature.
+7. Bootstrap the Android shell after architecture validation.
 
-## Cloudflare target
-- Project name: `document-power-toolkit`
-- Configure production environment variables from `.env.example` after GitHub upload.
-
-## Next verification sequence
-1. Upload/import this source into the GitHub repository.
-2. Let GitHub Actions install dependencies and run the full verification suite.
-3. Configure Cloudflare GitHub deployment and production Vite environment variables.
-4. Verify the deployed Web/PWA can sign up/sign in against the dedicated Supabase project.
-5. Bootstrap the first super-admin and verify pending → approved and device trust flows.
-6. Verify Realtime, offline behavior, metadata history, diagnostics, and feedback.
+## Product evolution rule
+Field beta does not pause development. While real-user telemetry accumulates, TANTRA continues to improve existing tools, advance tool capability levels, add new tools, and refine UX/performance.
