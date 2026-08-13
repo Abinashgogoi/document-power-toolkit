@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { classifyProcessingError } from './diagnostics';
+import { classifyProcessingError, shouldReportProcessingError } from './diagnostics';
 
 function fakeFile(type: string, size = 10): File {
   return new File(['x'.repeat(size)], 'private-name-is-not-sent.pdf', { type });
@@ -31,6 +31,19 @@ describe('classifyProcessingError', () => {
     });
     expect(first.code).toBe('PDF_PARSE_FAILED');
     expect(first.fingerprint).toBe(second.fingerprint);
+  });
+
+  it('does not report expected page-order validation mistakes', () => {
+    expect(
+      shouldReportProcessingError(
+        new Error('Page order must contain every page exactly once (1 to 4).'),
+      ),
+    ).toBe(false);
+  });
+
+  it('still reports genuine parser/runtime failures', () => {
+    expect(shouldReportProcessingError(new Error('Invalid PDF xref table'))).toBe(true);
+    expect(shouldReportProcessingError(new Error('Tesseract worker WASM failed to load'))).toBe(true);
   });
 
   it('uses a safe fallback for unknown failures', () => {

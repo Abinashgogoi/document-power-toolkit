@@ -37,6 +37,23 @@ function normalizedError(error: unknown): { name: string; message: string; lower
   return { name: 'Error', message, lower: message.toLowerCase() };
 }
 
+const EXPECTED_USER_INPUT_PATTERNS = [
+  'page order must contain every page exactly once',
+  'select at least one page',
+  'select at least one file',
+  'select at least two files',
+  'enter a valid page',
+  'enter a valid range',
+  'page range is required',
+  'page selection is required',
+  'no pages selected',
+] as const;
+
+export function shouldReportProcessingError(error: unknown): boolean {
+  const { lower } = normalizedError(error);
+  return !EXPECTED_USER_INPUT_PATTERNS.some((pattern) => lower.includes(pattern));
+}
+
 function classifyCode(tool: ToolId, lower: string): DiagnosticCode {
   if (lower.includes('unsupported') || lower.includes('file type') || lower.includes('mime')) return 'UNSUPPORTED_FILE';
   if (lower.includes('out of memory') || lower.includes('allocation failed') || lower.includes('memory limit')) return 'MEMORY_LIMIT';

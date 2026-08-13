@@ -22,7 +22,7 @@ import {
   appendSelectedFiles, downloadBlob, humanBytes, parseOrderedPageSelection, parsePageSelection,
 } from './lib/files';
 import { errorMessage } from './lib/verification';
-import { classifyProcessingError } from './lib/diagnostics';
+import { classifyProcessingError, shouldReportProcessingError } from './lib/diagnostics';
 import {
   emptyCloudState, loadCloudState, onAuthChange, signIn, signOut, signUp,
   submitDiagnostic, subscribeControlPlane, supabaseConfigured, syncHistoryEntry, updateDisplayName, type CloudState,
@@ -243,7 +243,7 @@ export default function App() {
       setError(errorMessage(caught));
       setProgress({ message: 'Processing stopped safely; the source was not changed.', percent: 0 });
 
-      if (cloudState.profile?.status === 'approved' && activeTool) {
+      if (cloudState.profile?.status === 'approved' && activeTool && shouldReportProcessingError(caught)) {
         const diagnostic = classifyProcessingError({
           tool: activeTool.id,
           error: caught,
