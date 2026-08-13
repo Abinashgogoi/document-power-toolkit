@@ -74,6 +74,9 @@
 .admin-header h2 { margin: 0 0 5px; font-size: 22px; color: var(--ink); }
 .admin-header p { margin: 0; color: var(--muted); font-size: 11px; }
 .admin-close { width: 35px; height: 35px; border-radius: 10px; border: 1px solid #d5dbe1; background: #fff; color: #566272; font-size: 23px; line-height: 1; }
+.admin-tabs { padding: 10px 24px 0; display: flex; gap: 8px; background: #fff; }
+.admin-tabs button { border: 1px solid #d7dde3; background: #fff; color: #5f6c7a; border-radius: 10px; min-height: 38px; padding: 8px 13px; display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 800; }
+.admin-tabs button.active { border-color: #a9d8ca; background: #eefaf6; color: var(--green-dark); }
 .admin-stats { padding: 13px 24px; display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; border-bottom: 1px solid var(--line); }
 .admin-stats div { padding: 11px 13px; border: 1px solid #e0e5e9; border-radius: 11px; background: #fff; }
 .admin-stats strong, .admin-stats span { display: block; }
@@ -93,6 +96,24 @@
 .account-controls .reason-field { grid-column: span 1; }
 .admin-save { min-width: 120px; }
 .account-protected { padding: 8px 10px; display: flex; align-items: center; gap: 7px; color: #786222; background: #fff9e8; border: 1px solid #f1dfa6; border-radius: 9px; font-size: 10px; }
+.device-list { padding: 0 24px 24px; overflow: auto; display: grid; gap: 11px; align-content: start; }
+.device-row { background: #fff; border: 1px solid #dfe4e9; border-radius: 14px; padding: 15px; display: grid; gap: 14px; }
+.device-heading { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 11px; }
+.device-icon { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: #eef5ff; color: #2f6da8; }
+.device-heading strong, .device-heading span, .device-heading small { display: block; }
+.device-heading strong { color: var(--ink); font-size: 13px; }
+.device-heading > div:nth-child(2) > span { margin-top: 2px; color: #596779; font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+.device-heading small { margin-top: 4px; color: #929ba6; font-size: 9px; }
+.device-badge { border-radius: 999px; padding: 5px 8px; font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .05em; }
+.device-badge.pending { background: #fff5d9; color: #996109; } .device-badge.trusted { background: #e9f8f2; color: #176c58; } .device-badge.revoked { background: #fff0f0; color: #a43a3a; }
+.device-meta { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 9px; }
+.device-meta div { min-width: 0; padding: 9px 10px; border-radius: 9px; background: #f6f8f9; }
+.device-meta span, .device-meta strong, .device-meta code { display: block; }
+.device-meta span { color: #8a95a1; font-size: 9px; }
+.device-meta strong, .device-meta code { margin-top: 4px; color: #445164; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.device-controls { display: grid; grid-template-columns: minmax(180px,260px) auto; gap: 10px; align-items: end; }
+.device-controls label { display: grid; gap: 6px; color: #435062; font-size: 11px; font-weight: 700; }
+.device-controls select { width: 100%; border: 1px solid #cad2da; border-radius: 10px; padding: 10px 11px; outline: none; background: #fff; color: var(--ink); font-size: 12px; }
 .admin-empty { padding: 40px; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); font-size: 12px; }
 
 @media (max-width: 760px) {
@@ -102,7 +123,9 @@
   .status-card { padding: 28px 20px; }
   .admin-backdrop { padding: 0; place-items: stretch; }
   .admin-panel { width: 100%; max-height: 100vh; border-radius: 0; }
-  .admin-header, .admin-stats, .admin-toolbar, .account-list { padding-left: 15px; padding-right: 15px; }
+  .admin-header, .admin-tabs, .admin-stats, .admin-toolbar, .account-list, .device-list { padding-left: 15px; padding-right: 15px; }
+  .device-meta { grid-template-columns: 1fr; }
+  .device-controls { grid-template-columns: 1fr; }
   .account-controls { grid-template-columns: 1fr 1fr; }
   .account-controls .reason-field { grid-column: 1 / -1; }
   .admin-save { grid-column: 1 / -1; }

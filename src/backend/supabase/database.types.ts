@@ -334,6 +334,13 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      admin_set_device_trust: {
+        Args: {
+          new_trust: Database["public"]["Enums"]["device_trust"];
+          target_id: string;
+        };
+        Returns: Database["public"]["Tables"]["devices"]["Row"];
+      };
       admin_set_account_control: {
         Args: {
           new_rejection_reason?: string | null;
