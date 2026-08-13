@@ -48,6 +48,7 @@ export type Database = {
           app_version: string;
           created_at: string;
           display_name: string;
+          email: string | null;
           id: string;
           last_active_at: string;
           os_version: string | null;
@@ -74,6 +75,7 @@ export type Database = {
           app_version?: string;
           created_at?: string;
           display_name?: string;
+          email?: string | null;
           id?: string;
           last_active_at?: string;
           os_version?: string | null;
@@ -296,6 +298,7 @@ export type Database = {
           approved_by: string | null;
           created_at: string;
           display_name: string;
+          email: string | null;
           id: string;
           rejection_reason: string | null;
           role: Database["public"]["Enums"]["account_role"];
@@ -307,6 +310,7 @@ export type Database = {
           approved_by?: string | null;
           created_at?: string;
           display_name?: string;
+          email?: string | null;
           id: string;
           rejection_reason?: string | null;
           role?: Database["public"]["Enums"]["account_role"];
@@ -318,6 +322,7 @@ export type Database = {
           approved_by?: string | null;
           created_at?: string;
           display_name?: string;
+          email?: string | null;
           id?: string;
           rejection_reason?: string | null;
           role?: Database["public"]["Enums"]["account_role"];
@@ -328,7 +333,28 @@ export type Database = {
       };
     };
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      admin_set_account_control: {
+        Args: {
+          new_rejection_reason?: string | null;
+          new_role?: Database["public"]["Enums"]["account_role"] | null;
+          new_status: Database["public"]["Enums"]["account_status"];
+          target_id: string;
+        };
+        Returns: {
+          approved_at: string | null;
+          approved_by: string | null;
+          created_at: string;
+          display_name: string;
+          email: string | null;
+          id: string;
+          rejection_reason: string | null;
+          role: Database["public"]["Enums"]["account_role"];
+          status: Database["public"]["Enums"]["account_status"];
+          updated_at: string;
+        };
+      };
+    };
     Enums: {
       account_role: "user" | "admin" | "super_admin";
       account_status: "pending" | "approved" | "rejected" | "disabled";

@@ -24,7 +24,9 @@ try {
   const ocrFixture = path.resolve('tests/fixtures/ocr-hello.png');
   const libraryScreenshot = path.resolve('tests/artifacts/tool-library.png');
   chromium.setGraphicsMode = false;
-  const executablePath = await inflate(path.resolve('node_modules/@sparticuz/chromium/bin/chromium.br'));
+  const executablePath = process.platform === 'win32'
+    ? playwright.executablePath()
+    : await inflate(path.resolve('node_modules/@sparticuz/chromium/bin/chromium.br'));
   browser = await playwright.launch({
     executablePath,
     headless: true,

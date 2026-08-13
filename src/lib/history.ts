@@ -36,7 +36,7 @@ export async function getLocalProfile(): Promise<LocalProfile> {
   }
   const now = new Date().toISOString();
   const profile: LocalProfile = {
-    name: 'Abinash Gogoi',
+    name: 'Local workspace',
     email: '',
     accountId: `ACC-LOCAL-${shortId()}`,
     deviceId: `DEV-WEB-${shortId()}`,

@@ -10,9 +10,10 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:ocr": "npm run prepare:ocr && node scripts/verify-ocr.mjs",
-    "test:browser": "npm run build && node scripts/browser-smoke.mjs",
+    "test:browser": "node scripts/build-e2e.mjs && node scripts/browser-smoke.mjs",
     "test:watch": "vitest",
-    "check": "tsc -b --pretty false"
+    "check": "tsc -b --pretty false",
+    "test:auth-gate": "npm run build && node scripts/auth-gate-smoke.mjs"
   },
   "dependencies": {
     "@tesseract.js-data/asm": "^1.0.0",

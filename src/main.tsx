@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { registerSW } from 'virtual:pwa-register';
 import App from './App';
+import AccessGate from './access/AccessGate';
 import './styles.css';
 
 const ONE_HOUR = 60 * 60 * 1000;
@@ -46,6 +47,8 @@ const updateSW = registerSW({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <AccessGate>
+      <App />
+    </AccessGate>
   </StrictMode>,
 );
