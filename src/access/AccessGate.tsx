@@ -1,13 +1,13 @@
 import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Ban, Check, Clock3, LoaderCircle, LockKeyhole, LogIn, LogOut, RefreshCw,
-  ShieldCheck, Smartphone, UserPlus, XCircle,
+  MessageSquareWarning, ShieldCheck, Smartphone, UserPlus, XCircle,
 } from 'lucide-react';
 import { getCloudIdentity, onAuthChange, signIn, signOut, signUp } from '../backend/supabase/auth';
 import { supabase } from '../backend/supabase/client';
 import { supabaseConfigured } from '../backend/supabase/config';
 import type {
-  AccountRole, AccountStatus, DeviceRow, DeviceTrust, ProfileRow,
+  AccountRole, AccountStatus, DeviceRow, DeviceTrust, DiagnosticRow, FeedbackRow, ProfileRow,
 } from '../backend/supabase/database.types';
 import { getLocalProfile, saveLocalProfile } from '../lib/history';
 import { errorMessage } from '../lib/verification';
@@ -373,29 +373,40 @@ function StatusCard({
 }
 
 function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void }) {
-  const [tab, setTab] = useState<'accounts' | 'devices'>('accounts');
+  const [tab, setTab] = useState<'accounts' | 'devices' | 'reports'>('accounts');
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [devices, setDevices] = useState<DeviceRow[]>([]);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticRow[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
+  const [reportMode, setReportMode] = useState<'diagnostics' | 'feedback'>('diagnostics');
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savingDeviceId, setSavingDeviceId] = useState<string | null>(null);
+  const [savingReportId, setSavingReportId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [drafts, setDrafts] = useState<Record<string, { status: AccountStatus; role: AccountRole; reason: string }>>({});
   const [deviceDrafts, setDeviceDrafts] = useState<Record<string, DeviceTrust>>({});
+  const [feedbackDrafts, setFeedbackDrafts] = useState<Record<string, string>>({});
 
   const refresh = useCallback(async () => {
     if (!supabase) return;
     setLoading(true); setError('');
     try {
-      const [pr, dr] = await Promise.all([
+      const [pr, dr, diagResult, feedbackResult] = await Promise.all([
         supabase.from('profiles').select('*').order('created_at', { ascending: false }),
         supabase.from('devices').select('*').order('last_active_at', { ascending: false }),
+        supabase.from('diagnostics').select('*').order('last_seen_at', { ascending: false }),
+        supabase.from('feedback').select('*').order('created_at', { ascending: false }),
       ]);
       if (pr.error) throw pr.error;
       if (dr.error) throw dr.error;
+      if (diagResult.error) throw diagResult.error;
+      if (feedbackResult.error) throw feedbackResult.error;
       const ps = pr.data ?? [];
       const ds = dr.data ?? [];
-      setProfiles(ps); setDevices(ds);
+      const diags = diagResult.data ?? [];
+      const feedbackRows = feedbackResult.data ?? [];
+      setProfiles(ps); setDevices(ds); setDiagnostics(diags); setFeedback(feedbackRows);
       setDrafts((cur) => {
         const n = { ...cur };
         for (const p of ps) if (!n[p.id]) n[p.id] = { status:p.status, role:p.role, reason:p.rejection_reason ?? '' };
@@ -404,6 +415,11 @@ function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void
       setDeviceDrafts((cur) => {
         const n = { ...cur };
         for (const d of ds) if (!n[d.id]) n[d.id] = d.trust;
+        return n;
+      });
+      setFeedbackDrafts((cur) => {
+        const n = { ...cur };
+        for (const item of feedbackRows) if (!n[item.id]) n[item.id] = item.status;
         return n;
       });
     } catch (caught) { setError(errorMessage(caught)); }
@@ -416,6 +432,8 @@ function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void
     const ch = c.channel('admin-control-lists')
       .on('postgres_changes', { event:'*', schema:'public', table:'profiles' }, () => void refresh())
       .on('postgres_changes', { event:'*', schema:'public', table:'devices' }, () => void refresh())
+      .on('postgres_changes', { event:'*', schema:'public', table:'diagnostics' }, () => void refresh())
+      .on('postgres_changes', { event:'*', schema:'public', table:'feedback' }, () => void refresh())
       .subscribe();
     return () => { void c.removeChannel(ch); };
   }, [refresh]);
@@ -432,7 +450,14 @@ function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void
     revoked: devices.filter(d => d.trust === 'revoked').length,
   }), [devices]);
 
+  const reportCounts = useMemo(() => ({
+    openDiagnostics: diagnostics.filter(item => item.resolved_at === null).length,
+    resolvedDiagnostics: diagnostics.filter(item => item.resolved_at !== null).length,
+    openFeedback: feedback.filter(item => !['closed','verified','duplicate','wont_fix'].includes(item.status)).length,
+  }), [diagnostics, feedback]);
+
   const profileById = useMemo(() => new Map(profiles.map(p => [p.id, p])), [profiles]);
+  const deviceById = useMemo(() => new Map(devices.map(d => [d.id, d])), [devices]);
 
   async function save(profile: ProfileRow) {
     if (!supabase) return;
@@ -463,9 +488,34 @@ function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void
     finally { setSavingDeviceId(null); }
   }
 
+  async function saveFeedbackStatus(item: FeedbackRow) {
+    if (!supabase) return;
+    const newStatus = feedbackDrafts[item.id] ?? item.status;
+    setSavingReportId(item.id); setError('');
+    try {
+      const { error: rpcError } = await supabase.rpc('admin_set_feedback_status', { target_id: item.id, new_status: newStatus });
+      if (rpcError) throw rpcError;
+      await refresh();
+    } catch (caught) { setError(errorMessage(caught)); }
+    finally { setSavingReportId(null); }
+  }
+
+  async function setDiagnosticResolution(item: DiagnosticRow, isResolved: boolean) {
+    if (!supabase) return;
+    setSavingReportId(item.id); setError('');
+    try {
+      const { error: rpcError } = await supabase.rpc('admin_set_diagnostic_resolution', { target_id: item.id, is_resolved: isResolved });
+      if (rpcError) throw rpcError;
+      await refresh();
+    } catch (caught) { setError(errorMessage(caught)); }
+    finally { setSavingReportId(null); }
+  }
+
   const stats = tab === 'accounts'
     ? [[accountCounts.pending,'Pending'],[accountCounts.approved,'Approved'],[accountCounts.blocked,'Blocked']]
-    : [[deviceCounts.pending,'Pending'],[deviceCounts.trusted,'Trusted'],[deviceCounts.revoked,'Revoked']];
+    : tab === 'devices'
+      ? [[deviceCounts.pending,'Pending'],[deviceCounts.trusted,'Trusted'],[deviceCounts.revoked,'Revoked']]
+      : [[reportCounts.openDiagnostics,'Open diagnostics'],[reportCounts.resolvedDiagnostics,'Resolved diagnostics'],[reportCounts.openFeedback,'Open feedback']];
 
   return (
     <div className="admin-backdrop" role="presentation" onMouseDown={(event) => {
@@ -476,7 +526,7 @@ function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void
           <div>
             <span className="auth-eyebrow">Administration</span>
             <h2>Access control</h2>
-            <p>Manage account approval, roles, and recognized devices.</p>
+            <p>Manage accounts, recognized devices, diagnostics, and user feedback.</p>
           </div>
           <button className="admin-close" onClick={onClose} aria-label="Close admin controls">×</button>
         </header>
@@ -487,6 +537,9 @@ function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void
           </button>
           <button className={tab === 'devices' ? 'active' : ''} type="button" onClick={() => setTab('devices')}>
             <Smartphone size={16}/> Devices
+          </button>
+          <button className={tab === 'reports' ? 'active' : ''} type="button" onClick={() => setTab('reports')}>
+            <MessageSquareWarning size={16}/> Reports
           </button>
         </div>
 
@@ -536,7 +589,7 @@ function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void
               );
             })}
           </div>
-        ) : (
+        ) : tab === 'devices' ? (
           <div className="device-list">
             {loading && devices.length === 0 ? <div className="admin-empty"><LoaderCircle className="gate-spin" size={20}/> Loading devices…</div>
             : devices.length === 0 ? <div className="admin-empty">No registered devices yet.</div>
@@ -570,6 +623,40 @@ function AdminPanel({ actor, onClose }: { actor: ProfileRow; onClose: () => void
                 </article>
               );
             })}
+          </div>
+        ) : (
+          <div className="reports-wrap">
+            <div className="report-tabs">
+              <button type="button" className={reportMode === 'diagnostics' ? 'active' : ''} onClick={() => setReportMode('diagnostics')}>Diagnostics</button>
+              <button type="button" className={reportMode === 'feedback' ? 'active' : ''} onClick={() => setReportMode('feedback')}>Feedback</button>
+            </div>
+            {reportMode === 'diagnostics' ? (
+              <div className="report-list">
+                {diagnostics.length === 0 ? <div className="admin-empty">No diagnostic reports yet.</div> : diagnostics.map((item) => {
+                  const owner = profileById.get(item.account_id);
+                  const device = item.device_id ? deviceById.get(item.device_id) : undefined;
+                  const resolved = item.resolved_at !== null;
+                  return <article className="report-row" key={item.id}>
+                    <div className="report-heading"><div><span className="report-kind">Diagnostic · {item.module}</span><strong>{item.error_code}</strong><p>{item.safe_message}</p></div><span className={`report-badge ${resolved ? 'resolved' : 'open'}`}>{resolved ? 'Resolved' : 'Open'}</span></div>
+                    <div className="report-meta"><div><span>User</span><strong>{owner?.display_name ?? 'Unknown user'}</strong></div><div><span>Device</span><strong>{device?.display_name ?? 'Unknown / unavailable'}</strong></div><div><span>App</span><strong>{item.app_version}</strong></div><div><span>Occurrences</span><strong>{item.occurrence_count}</strong></div><div><span>First seen</span><strong>{new Date(item.first_seen_at).toLocaleString()}</strong></div><div><span>Last seen</span><strong>{new Date(item.last_seen_at).toLocaleString()}</strong></div></div>
+                    <button className={resolved ? 'gate-secondary report-action' : 'gate-primary report-action'} disabled={savingReportId === item.id} onClick={() => void setDiagnosticResolution(item, !resolved)}>{savingReportId === item.id ? <LoaderCircle className="gate-spin" size={16}/> : <Check size={16}/>} {resolved ? 'Reopen diagnostic' : 'Mark resolved'}</button>
+                  </article>;
+                })}
+              </div>
+            ) : (
+              <div className="report-list">
+                {feedback.length === 0 ? <div className="admin-empty">No user feedback yet.</div> : feedback.map((item) => {
+                  const owner = profileById.get(item.account_id);
+                  const device = item.device_id ? deviceById.get(item.device_id) : undefined;
+                  const draftStatus = feedbackDrafts[item.id] ?? item.status;
+                  return <article className="report-row" key={item.id}>
+                    <div className="report-heading"><div><span className="report-kind">Feedback · {item.category}</span><strong>{item.subject}</strong><p>{item.body}</p></div><span className="report-badge feedback">{item.status.replaceAll('_',' ')}</span></div>
+                    <div className="report-meta"><div><span>User</span><strong>{owner?.display_name ?? 'Unknown user'}</strong></div><div><span>Device</span><strong>{device?.display_name ?? 'Unknown / unavailable'}</strong></div><div><span>Date</span><strong>{new Date(item.created_at).toLocaleString()}</strong></div></div>
+                    <div className="report-controls"><label>Status<select value={draftStatus} onChange={(e) => setFeedbackDrafts(c => ({...c,[item.id]:e.target.value}))}><option value="new">New</option><option value="confirmed">Confirmed</option><option value="in_progress">In progress</option><option value="fixed">Fixed</option><option value="testing">Testing</option><option value="released">Released</option><option value="verified">Verified</option><option value="closed">Closed</option><option value="duplicate">Duplicate</option><option value="wont_fix">Won't fix</option></select></label><button className="gate-primary report-action" disabled={savingReportId === item.id} onClick={() => void saveFeedbackStatus(item)}>{savingReportId === item.id ? <LoaderCircle className="gate-spin" size={16}/> : <Check size={16}/>} Save report status</button></div>
+                  </article>;
+                })}
+              </div>
+            )}
           </div>
         )}
       </section>

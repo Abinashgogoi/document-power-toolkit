@@ -131,3 +131,28 @@
   .admin-save { grid-column: 1 / -1; }
   .admin-launcher { right: 14px; bottom: 14px; }
 }
+
+.reports-wrap { min-height: 0; overflow: hidden; display: grid; grid-template-rows: auto 1fr; }
+.report-tabs { padding: 0 24px 12px; display: flex; gap: 8px; }
+.report-tabs button { border: 1px solid #d7dde3; background: #fff; color: #5f6c7a; border-radius: 999px; padding: 7px 12px; font-size: 10px; font-weight: 800; }
+.report-tabs button.active { border-color: #a9d8ca; background: #eefaf6; color: var(--green-dark); }
+.report-list { padding: 0 24px 24px; overflow: auto; display: grid; gap: 11px; align-content: start; }
+.report-row { background: #fff; border: 1px solid #dfe4e9; border-radius: 14px; padding: 15px; display: grid; gap: 13px; }
+.report-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.report-heading strong { display: block; color: var(--ink); font-size: 13px; margin-top: 3px; }
+.report-heading p { margin: 5px 0 0; color: #5e6b7a; font-size: 11px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.report-kind { color: var(--green-dark); font-size: 9px; font-weight: 850; text-transform: uppercase; letter-spacing: .06em; }
+.report-badge { flex: 0 0 auto; border-radius: 999px; padding: 5px 8px; font-size: 9px; font-weight: 850; text-transform: uppercase; }
+.report-badge.open { background: #fff5d9; color: #996109; }
+.report-badge.resolved { background: #e9f8f2; color: #176c58; }
+.report-badge.feedback { background: #eef3ff; color: #3d5c99; }
+.report-meta { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.report-meta div { min-width: 0; padding: 9px 10px; background: #f6f8f9; border-radius: 9px; }
+.report-meta span, .report-meta strong { display: block; }
+.report-meta span { color: #8a95a1; font-size: 9px; }
+.report-meta strong { margin-top: 4px; color: #445164; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.report-controls { display: grid; grid-template-columns: minmax(180px,280px) auto; gap: 10px; align-items: end; }
+.report-controls label { display: grid; gap: 6px; color: #435062; font-size: 11px; font-weight: 700; }
+.report-controls select { width: 100%; border: 1px solid #cad2da; border-radius: 10px; padding: 10px 11px; background: #fff; color: var(--ink); font-size: 12px; }
+.report-action { justify-self: start; min-width: 155px; }
+@media (max-width: 760px) { .report-meta { grid-template-columns: 1fr; } .report-controls { grid-template-columns: 1fr; } .report-tabs, .report-list { padding-left: 15px; padding-right: 15px; } }

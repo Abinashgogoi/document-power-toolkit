@@ -334,6 +334,14 @@ export type Database = {
     };
     Views: { [_ in never]: never };
     Functions: {
+      admin_set_diagnostic_resolution: {
+        Args: { is_resolved: boolean; target_id: string; };
+        Returns: Database["public"]["Tables"]["diagnostics"]["Row"];
+      };
+      admin_set_feedback_status: {
+        Args: { new_status: string; target_id: string; };
+        Returns: Database["public"]["Tables"]["feedback"]["Row"];
+      };
       admin_set_device_trust: {
         Args: {
           new_trust: Database["public"]["Enums"]["device_trust"];
@@ -376,4 +384,6 @@ export type AccountRole = Database["public"]["Enums"]["account_role"];
 export type DeviceTrust = Database["public"]["Enums"]["device_trust"];
 export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 export type DeviceRow = Database["public"]["Tables"]["devices"]["Row"];
+export type DiagnosticRow = Database["public"]["Tables"]["diagnostics"]["Row"];
+export type FeedbackRow = Database["public"]["Tables"]["feedback"]["Row"];
 export type FeatureFlagRow = Database["public"]["Tables"]["feature_flags"]["Row"];
